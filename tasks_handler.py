@@ -3,8 +3,8 @@ from aiogram.types import Message, CallbackQuery, InputFile
 from aiogram.filters import Command
 from aiogram.fsm.context import FSMContext
 from aiogram.fsm.state import State, StatesGroup
-from keyboards.reply import get_main_keyboard
-from keyboards.inline import get_shop_keyboard, get_back_keyboard
+from keyboards.reply_pie import get_main_keyboard
+from keyboards.inline_pie import get_shop_keyboard, get_back_keyboard
 
 
 router = Router()
