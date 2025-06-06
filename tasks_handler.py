@@ -1,94 +1,68 @@
-from aiogram import types, Dispatcher
-from aiogram.dispatcher import FSMContext
-from aiogram.dispatcher.filters.state import State, StatesGroup
-from aiogram.types import ReplyKeyboardMarkup, KeyboardButton, ContentType
+from aiogram import Router, F
+from aiogram.types import Message, CallbackQuery, InputFile
+from aiogram.filters import Command
+from aiogram.fsm.context import FSMContext
+from aiogram.fsm.state import State, StatesGroup
+from keyboards.reply import get_main_keyboard
+from keyboards.inline import get_shop_keyboard, get_back_keyboard
 
-# Кнопки для вибору магазину
-shop_keyboard = ReplyKeyboardMarkup(resize_keyboard=True)
-shop_keyboard.add("Пасаж", "Ломоносова").add("Пулюя", "Теремки")
+router = Router()
 
-# Кнопка назад
-back_keyboard = ReplyKeyboardMarkup(resize_keyboard=True).add(KeyboardButton("🔙 Назад до меню"))
-
+# --- FSM States ---
 class TaskForm(StatesGroup):
-    shop = State()
-    florist = State()
-    flower_name = State()
-    flower_height = State()
-    flower_price = State()
-    flower_quantity = State()
-    flower_photo = State()
-    confirm_more = State()
+    choosing_shop = State()
+    entering_florist = State()
+    uploading_photo = State()
 
-def register_task_handlers(dp: Dispatcher, bot, admin_chat_id: int):
-    @dp.message_handler(lambda msg: msg.text == "📝 Завдання", state="*")
-    async def start_task(message: types.Message, state: FSMContext):
-        await message.answer("🏪 Оберіть магазин:", reply_markup=shop_keyboard)
-        await TaskForm.shop.set()
+# --- Start Task ---
+@router.message(F.text.lower() == "📦 списання квітів")
+async def start_task(message: Message, state: FSMContext):
+    await state.set_state(TaskForm.choosing_shop)
+    await message.answer("📍 Виберіть магазин:", reply_markup=get_shop_keyboard())
 
-    @dp.message_handler(state=TaskForm.shop)
-    async def get_shop(message: types.Message, state: FSMContext):
-        await state.update_data(shop=message.text)
-        await message.answer("👤 Введіть ім’я флориста:", reply_markup=back_keyboard)
-        await TaskForm.florist.set()
+# --- Handle Shop Selection ---
+@router.callback_query(TaskForm.choosing_shop)
+async def handle_shop_selection(callback: CallbackQuery, state: FSMContext):
+    await state.update_data(shop=callback.data)
+    await state.set_state(TaskForm.entering_florist)
+    await callback.message.edit_text("👩‍🎨 Введіть ім'я та прізвище флориста:", reply_markup=get_back_keyboard())
+    await callback.answer()
 
-    @dp.message_handler(state=TaskForm.florist)
-    async def get_florist(message: types.Message, state: FSMContext):
-        await state.update_data(florist=message.text)
-        await message.answer("🌸 Назва квітки:")
-        await TaskForm.flower_name.set()
+# --- Handle Florist Input ---
+@router.message(TaskForm.entering_florist, F.text)
+async def handle_florist_input(message: Message, state: FSMContext):
+    await state.update_data(florist=message.text)
+    await state.set_state(TaskForm.uploading_photo)
+    await message.answer("📷 Завантажте фото", reply_markup=get_back_keyboard())
 
-    @dp.message_handler(state=TaskForm.flower_name)
-    async def get_flower_name(message: types.Message, state: FSMContext):
-        await state.update_data(flower_name=message.text)
-        await message.answer("📏 Зріст квітки (см):")
-        await TaskForm.flower_height.set()
+# --- Handle Photo Upload ---
+@router.message(TaskForm.uploading_photo, F.photo)
+async def handle_photo_upload(message: Message, state: FSMContext):
+    photo_id = message.photo[-1].file_id
+    data = await state.get_data()
 
-    @dp.message_handler(state=TaskForm.flower_height)
-    async def get_flower_height(message: types.Message, state: FSMContext):
-        await state.update_data(flower_height=message.text)
-        await message.answer("💵 Ціна на вітрині (грн):")
-        await TaskForm.flower_price.set()
+    summary = (
+        f"✅ Завдання збережено!\n"
+        f"🏬 Магазин: {data['shop']}\n"
+        f"👤 Флорист: {data['florist']}"
+    )
 
-    @dp.message_handler(state=TaskForm.flower_price)
-    async def get_flower_price(message: types.Message, state: FSMContext):
-        await state.update_data(flower_price=message.text)
-        await message.answer("🔢 Кількість:")
-        await TaskForm.flower_quantity.set()
+    await message.answer_photo(photo_id, caption=summary, reply_markup=get_main_keyboard())
+    await state.clear()
 
-    @dp.message_handler(state=TaskForm.flower_quantity)
-    async def get_flower_quantity(message: types.Message, state: FSMContext):
-        await state.update_data(flower_quantity=message.text)
-        await message.answer("📷 Надішліть фото:")
-        await TaskForm.flower_photo.set()
+# --- Кнопка "Назад" ---
+@router.callback_query(F.data == "back")
+async def go_back(callback: CallbackQuery, state: FSMContext):
+    current = await state.get_state()
 
-    @dp.message_handler(state=TaskForm.flower_photo, content_types=ContentType.PHOTO)
-    async def get_flower_photo(message: types.Message, state: FSMContext):
-        await state.update_data(flower_photo=message.photo[-1].file_id)
+    if current == TaskForm.uploading_photo:
+        await state.set_state(TaskForm.entering_florist)
+        await callback.message.edit_text("👩‍🎨 Введіть ім'я та прізвище флориста:", reply_markup=get_back_keyboard())
+    elif current == TaskForm.entering_florist:
+        await state.set_state(TaskForm.choosing_shop)
+        await callback.message.edit_text("📍 Виберіть магазин:", reply_markup=get_shop_keyboard())
+    else:
+        await state.clear()
+        await callback.message.answer("Операція скасована", reply_markup=get_main_keyboard())
 
-        data = await state.get_data()
-
-        # Текст звіту
-        task_report = (
-            f"📝 *Списання квітів (Завдання)*\n\n"
-            f"🏪 Магазин: {data['shop']}\n"
-            f"👤 Флорист: {data['florist']}\n"
-            f"🌸 Квітка: {data['flower_name']}\n"
-            f"📏 Зріст: {data['flower_height']} см\n"
-            f"💵 Ціна: {data['flower_price']} грн\n"
-            f"🔢 Кількість: {data['flower_quantity']}"
-        )
-
-        await bot.send_photo(chat_id=admin_chat_id, photo=data['flower_photo'], caption=task_report, parse_mode="Markdown")
-
-        await message.answer("➕ Додати ще одну квітку?", reply_markup=ReplyKeyboardMarkup(resize_keyboard=True).add("Так", "Ні"))
-        await TaskForm.confirm_more.set()
-
-    @dp.message_handler(state=TaskForm.confirm_more)
-    async def handle_confirm_more(message: types.Message, state: FSMContext):
-        if message.text.lower() == "так":
-            await message.answer("🌸 Назва квітки:")
-            await TaskForm.flower_name.set()
-        else:
-            await message.answer("✅ Завдання завершено. Повертаємось до меню.", reply_markup=back_keyboard)
-            await state.finish()
+    await callback.answer()
