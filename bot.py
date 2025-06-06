@@ -1,6 +1,8 @@
 from aiogram import Bot, Dispatcher, types
 from aiogram.types import (
-    ReplyKeyboardMarkup,
+from keyboards.InlinePie import get_shop_keyboard, get_back_keyboard
+from keyboards.ReplayPie import get_main_menu_keyboard
+ReplyKeyboardMarkup,
     KeyboardButton,
     InlineKeyboardButton,
     InlineKeyboardMarkup
