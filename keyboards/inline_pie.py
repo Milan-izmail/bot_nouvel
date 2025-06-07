@@ -1,12 +1,12 @@
 from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton
 
 def get_shop_keyboard():
-    return InlineKeyboardMarkup(inline_keyboard=[
-        [InlineKeyboardButton(text="Пасаж", callback_data="Пасаж")],
-        [InlineKeyboardButton(text="Ломоносова", callback_data="Ломоносова")]
-    ])
+    return InlineKeyboardMarkup().add(
+        InlineKeyboardButton("Пасаж", callback_data="shop_passage"),
+        InlineKeyboardButton("Ломоносова", callback_data="shop_lomonosova")
+    )
 
 def get_back_keyboard():
-    return InlineKeyboardMarkup(inline_keyboard=[
-        [InlineKeyboardButton(text="🔙 Назад", callback_data="back")]
-    ])
+    return InlineKeyboardMarkup().add(
+        InlineKeyboardButton("⬅️ Назад", callback_data="go_back")
+    )
