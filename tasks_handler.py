@@ -4,7 +4,7 @@ from aiogram.dispatcher.filters.state import State, StatesGroup
 from aiogram.dispatcher import Dispatcher
 from aiogram.types import CallbackQuery
 
-from keyboards.reply_pie import get_main_keyboard
+from keyboards.reply_pie import get_main_menu_keyboard
 from keyboards.inline_pie import get_shop_keyboard, get_back_keyboard
 
 # --- FSM States ---
