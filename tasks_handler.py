@@ -28,8 +28,10 @@ def register_task_handlers(dp: Dispatcher, bot, admin_chat_id: int):
         await state.update_data(shop=callback.data)
         await state.set_state(TaskForm.entering_florist.state)
         await callback.message.answer("👤 Введіть ім’я та прізвище флориста:", reply_markup=get_back_keyboard())
+        await state.finish()
+        await callback.message.answer("🔙 Повернення до головного меню", reply_markup=reply_pie.get_main_menu_keyboard())
         await callback.answer()
-
+        
     # --- Enter Florist Name ---
     @dp.message_handler(state=TaskForm.entering_florist)
     async def handle_florist_name(message: types.Message, state: FSMContext):
