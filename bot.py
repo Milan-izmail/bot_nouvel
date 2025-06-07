@@ -1,12 +1,13 @@
 from aiogram import Bot, Dispatcher, types
 from aiogram.types import (
-from keyboards.inline_pie import get_shop_keyboard, get_back_keyboard
-from keyboards.replay_pie import get_main_menu_keyboard
-ReplyKeyboardMarkup,
+    ReplyKeyboardMarkup,
     KeyboardButton,
     InlineKeyboardButton,
     InlineKeyboardMarkup
 )
+
+from keyboards import inline_pie, reply_pie  # імпортуємо модулі як об'єкти
+
 from aiogram.utils import executor
 from aiogram.contrib.fsm_storage.memory import MemoryStorage
 import os
