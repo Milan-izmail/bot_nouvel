@@ -6,7 +6,7 @@ from aiogram.types import (
     InlineKeyboardMarkup
 )
 
-from keyboards import inline_pie, reply_pie  # імпортуємо модулі як об'єкти
+from keyboards import inline_pie, reply_pie  # правильні імпорти
 
 from aiogram.utils import executor
 from aiogram.contrib.fsm_storage.memory import MemoryStorage
@@ -27,18 +27,7 @@ storage = MemoryStorage()
 dp = Dispatcher(bot, storage=storage)
 
 # --- Меню ---
-main_menu = ReplyKeyboardMarkup(resize_keyboard=True)
-main_menu.add(
-    KeyboardButton("💳 Оплата"),
-    KeyboardButton("🌱 Поради по догляду"),
-    KeyboardButton("📝 Відгук"),
-    KeyboardButton("🚚 Доставка")
-)
-main_menu.add(
-    KeyboardButton("📦 Списання квітів"),
-    KeyboardButton("💬 Онлайн-чат для клієнта"),
-    KeyboardButton("📝 Завдання")
-)
+main_menu = reply_pie.get_main_menu_keyboard()
 
 # --- Google-відгуки ---
 review_keyboard = InlineKeyboardMarkup(row_width=2).add(
