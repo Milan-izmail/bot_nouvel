@@ -1,6 +1,4 @@
-from aiogram.types import ReplyKeyboardMarkup, KeyboardButton
-
-def get_main_menu_keyboard():
+def get_main_keyboard():
     return ReplyKeyboardMarkup(resize_keyboard=True).add(
         KeyboardButton("💳 Оплата"),
         KeyboardButton("🌱 Поради по догляду"),
