@@ -134,8 +134,8 @@ async def handle_message(message: types.Message):
 
     elif intent == "greeting":
         await message.reply("👋 Привіт, колего! Оберіть дію з меню або напишіть, чим можу допомогти.")
-
-    else:
+        
+else:
     await message.reply("🧠 Готую пораду... Трохи терпіння 🌿")
     try:
         gpt_reply = ask_gpt(text)
