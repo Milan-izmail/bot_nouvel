@@ -137,7 +137,6 @@ async def handle_message(message: types.Message):
 
     else:
     await message.reply("🧠 Готую пораду... Трохи терпіння 🌿")
-    
     try:
         gpt_reply = ask_gpt(text)
         await message.reply(gpt_reply)
