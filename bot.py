@@ -134,15 +134,16 @@ async def handle_message(message: types.Message):
 
     elif intent == "greeting":
         await message.reply("👋 Привіт, колего! Оберіть дію з меню або напишіть, чим можу допомогти.")
-        
-else:
-    await message.reply("🧠 Готую пораду... Трохи терпіння 🌿")
-    try:
-        gpt_reply = ask_gpt(text)
-        await message.reply(gpt_reply)
-    except Exception as e:
-        print(f"GPT error: {e}")
-        await message.reply("⚠️ Виникла помилка при генерації поради. Спробуйте ще раз пізніше.")
+
+    else:
+        await message.reply("🧠 Готую пораду... Трохи терпіння 🌿")
+        try:
+            gpt_reply = ask_gpt(text)
+            await message.reply(gpt_reply)
+        except Exception as e:
+            print(f"GPT error: {e}")
+            await message.reply("⚠️ Виникла помилка при генерації поради. Спробуйте ще раз пізніше.")
+
 
 # --- Запуск ---
 if __name__ == "__main__":
