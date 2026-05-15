@@ -2,4 +2,4 @@ aiogram==2.25.2
 python-dotenv
 aiohttp
 requests
-openai
+openai>=1.99.0

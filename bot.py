@@ -37,6 +37,19 @@ review_keyboard = InlineKeyboardMarkup(row_width=2).add(
     InlineKeyboardButton("Пулюя", url="https://maps.app.goo.gl/9vq2w9rpnhWYGpB49")
 )
 
+product_assistant_keyboard = InlineKeyboardMarkup(row_width=2).add(
+    InlineKeyboardButton("Переписати опис", callback_data="product_rewrite"),
+    InlineKeyboardButton("Преміальніше", callback_data="product_more_premium"),
+    InlineKeyboardButton("Коротше", callback_data="product_shorter"),
+    InlineKeyboardButton("Більше емоції", callback_data="product_more_emotion"),
+    InlineKeyboardButton("Більше SEO", callback_data="product_more_seo"),
+    InlineKeyboardButton("Без пафосу", callback_data="product_less_pathos"),
+    InlineKeyboardButton("Додати склад", callback_data="product_add_composition"),
+    InlineKeyboardButton("Не вигадувати склад", callback_data="product_no_fake_composition"),
+    InlineKeyboardButton("Перевірити якість", callback_data="product_quality_check"),
+    InlineKeyboardButton("Опублікувати після перевірки", callback_data="product_publish_after_check"),
+)
+
 # --- /start ---
 @dp.message_handler(commands=['start'])
 async def handle_start(message: types.Message):
@@ -70,12 +83,12 @@ async def handle_delivery(message: types.Message):
     )
     await message.reply(
         "🚚 Політика доставки по Києву:\n\n"
-        "• Базова доставка — 190 грн\n"
-        "• В негоду або в години пік — 290–390 грн\n"
-        "• Максимум для клієнта — 490 грн\n"
-        "• Безкоштовно — від суми 2500 грн\n"
-        "• Під час тривоги — затримка, але без доплат\n"
-        "• Комфорт Таун — спецтарифи\n\n"
+        "• Базова доставка: 190 грн\n"
+        "• В негоду або в години пік: 290-390 грн\n"
+        "• Максимум для клієнта: 490 грн\n"
+        "• Безкоштовно: від суми 2500 грн\n"
+        "• Під час тривоги: затримка, але без доплат\n"
+        "• Комфорт Таун: спецтарифи\n\n"
         "✅ Ми прагнемо чесного сервісу без прихованих платежів.",
         reply_markup=keyboard
     )
@@ -86,11 +99,11 @@ async def explain_delivery_callback(callback_query: types.CallbackQuery):
     await bot.send_message(
         callback_query.from_user.id,
         "📋 Як пояснити клієнту:\n\n"
-        "– Основний тариф: 190 грн\n"
-        "– В негоду або годину пік — до 490 грн\n"
-        "– Якщо замовлення > 2500 грн — доставка безкоштовна\n"
-        "– Ми не беремо доплат під час повітряної тривоги\n"
-        "– Остаточна ціна завжди погоджується наперед"
+        "- Основний тариф: 190 грн\n"
+        "- В негоду або годину пік: до 490 грн\n"
+        "- Якщо замовлення > 2500 грн: доставка безкоштовна\n"
+        "- Ми не беремо доплат під час повітряної тривоги\n"
+        "- Остаточна ціна завжди погоджується наперед"
     )
 
 # --- Обробка всіх інших повідомлень ---
@@ -127,7 +140,7 @@ async def handle_message(message: types.Message):
         await message.reply("🌱 Напишіть назву квітки або вазона, і я підкажу, як за нею доглядати.")
 
     elif intent == "thank_you":
-        await message.reply("💐 Радий допомогти! Якщо клієнт був задоволений — запропонуйте залишити відгук:", reply_markup=review_keyboard)
+        await message.reply("💐 Радий допомогти! Якщо клієнт був задоволений, запропонуйте залишити відгук:", reply_markup=review_keyboard)
 
     elif intent == "review_request":
         await message.reply("📝 Оберіть магазин для відгуку:", reply_markup=review_keyboard)
@@ -135,14 +148,23 @@ async def handle_message(message: types.Message):
     elif intent == "greeting":
         await message.reply("👋 Привіт, колего! Оберіть дію з меню або напишіть, чим можу допомогти.")
         
-else:
-    await message.reply("🧠 Готую пораду... Трохи терпіння 🌿")
-    try:
-        gpt_reply = ask_gpt(text)
-        await message.reply(gpt_reply)
-    except Exception as e:
-        print(f"GPT error: {e}")
-        await message.reply("⚠️ Виникла помилка при генерації поради. Спробуйте ще раз пізніше.")
+    else:
+        await message.reply("Готую картку товару і перевіряю якість тексту...")
+        try:
+            gpt_reply = ask_gpt(text)
+            await message.reply(gpt_reply, reply_markup=product_assistant_keyboard)
+        except Exception as e:
+            print(f"GPT error: {e}")
+            await message.reply("Не вдалося згенерувати картку. Перевірте вхідні дані і спробуйте ще раз.")
+
+
+@dp.callback_query_handler(lambda c: c.data and c.data.startswith("product_"))
+async def product_action_callback(callback_query: types.CallbackQuery):
+    await bot.answer_callback_query(callback_query.id)
+    await bot.send_message(
+        callback_query.from_user.id,
+        "Дію прийнято. Надішліть уточнення або повторіть запит з потрібною правкою."
+    )
 
 # --- Запуск ---
 if __name__ == "__main__":
