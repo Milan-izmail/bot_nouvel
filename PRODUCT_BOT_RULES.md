@@ -18,6 +18,32 @@ ShopExpress needs a complete ecommerce product card: short description, full des
 
 ShopExpress text should be publication-ready.
 
+## Product Creation Fields
+
+Every generated card must also include technical fields for creating the product.
+
+Display settings:
+
+- Set `display_settings.show_on_homepage` to `true`.
+- This means the product should be shown on the homepage.
+
+Related products:
+
+- Always add these related products: аудіолистівка, зайчик, персоналізована стрічка, кулька.
+- Do not replace them with random accessories.
+
+Pricing:
+
+- Do not set a base price.
+- `pricing.base_price` must stay empty.
+- Set only the retail price in `price` and `pricing.retail_price`.
+- `pricing.do_not_set_base_price` must be `true`.
+
+Product link:
+
+- Do not fill a product link.
+- `product_link` must stay empty.
+
 ## Short Description vs Full Description
 
 Short description:

@@ -25,6 +25,16 @@ def main() -> int:
         "no_long_dash": LONG_DASH_RE.search(text) is None,
         "no_aroma": not has_aroma_mention(text),
         "has_substitution_note": card["substitution_note"] == SUBSTITUTION_NOTE,
+        "show_on_homepage": card["display_settings"]["show_on_homepage"] is True,
+        "has_required_related_products": card["related_products"] == [
+            "аудіолистівка",
+            "зайчик",
+            "персоналізована стрічка",
+            "кулька",
+        ],
+        "base_price_empty": card["pricing"]["base_price"] == "",
+        "retail_price_only": card["pricing"]["retail_price"] == card["price"] and bool(card["price"]),
+        "product_link_empty": card["product_link"] == "",
     }
 
     result = {

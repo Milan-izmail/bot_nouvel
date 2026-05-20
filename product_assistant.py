@@ -59,6 +59,11 @@ SUBSTITUTION_NOTE = (
 PRODUCT_CARD_SCHEMA: dict[str, Any] = {
     "name": "",
     "price": "",
+    "pricing": {
+        "base_price": "",
+        "retail_price": "",
+        "do_not_set_base_price": True,
+    },
     "category": "",
     "type": "",
     "short_salesbox_description": "",
@@ -82,6 +87,22 @@ PRODUCT_CARD_SCHEMA: dict[str, Any] = {
         "occasion": "",
         "mood": "",
     },
+    "display_settings": {
+        "show_on_homepage": True,
+    },
+    "related_products": [
+        "аудіолистівка",
+        "зайчик",
+        "персоналізована стрічка",
+        "кулька",
+    ],
+    "product_link": "",
+    "publication_notes": [
+        "Не заповнювати посилання на товар.",
+        "Не виставляти базову ціну.",
+        "Виставляти тільки роздрібну ціну.",
+        "У налаштуваннях відображення увімкнути показ на головній.",
+    ],
     "substitution_note": "",
     "quality_score": 0,
     "quality_status": "rewrite_required",
@@ -116,6 +137,29 @@ def normalize_card(card: dict[str, Any]) -> dict[str, Any]:
     attrs = card.get("attributes") if isinstance(card.get("attributes"), dict) else {}
     for key in normalized["attributes"]:
         normalized["attributes"][key] = attrs.get(key, "") or ""
+
+    pricing = card.get("pricing") if isinstance(card.get("pricing"), dict) else {}
+    normalized["pricing"]["base_price"] = ""
+    normalized["pricing"]["retail_price"] = pricing.get("retail_price") or normalized["price"] or card.get("price", "") or ""
+    normalized["pricing"]["do_not_set_base_price"] = True
+    normalized["price"] = normalized["pricing"]["retail_price"] or normalized["price"]
+
+    display_settings = card.get("display_settings") if isinstance(card.get("display_settings"), dict) else {}
+    normalized["display_settings"]["show_on_homepage"] = display_settings.get("show_on_homepage", True) is not False
+
+    normalized["related_products"] = [
+        "аудіолистівка",
+        "зайчик",
+        "персоналізована стрічка",
+        "кулька",
+    ]
+    normalized["product_link"] = ""
+    normalized["publication_notes"] = [
+        "Не заповнювати посилання на товар.",
+        "Не виставляти базову ціну.",
+        "Виставляти тільки роздрібну ціну.",
+        "У налаштуваннях відображення увімкнути показ на головній.",
+    ]
 
     for key in ["recipient", "occasion", "alt_texts", "categories", "tags"]:
         if isinstance(normalized[key], str):
@@ -221,6 +265,18 @@ def score_card(card: dict[str, Any]) -> tuple[int, str, str]:
         blockers.append("немає точної примітки про заміну")
     if LONG_DASH_RE.search(text):
         blockers.append("є довге тире")
+
+    required_related = {"аудіолистівка", "зайчик", "персоналізована стрічка", "кулька"}
+    if not card["display_settings"]["show_on_homepage"]:
+        blockers.append("не увімкнено показ на головній")
+    if set(card["related_products"]) != required_related:
+        blockers.append("не заповнені обов'язкові супутні товари")
+    if card["pricing"]["base_price"]:
+        blockers.append("заповнена базова ціна")
+    if not card["pricing"]["retail_price"]:
+        blockers.append("не заповнена роздрібна ціна")
+    if card["product_link"]:
+        blockers.append("заповнене посилання на товар")
 
     status = "approved" if not blockers else "rewrite_required"
     reason = "; ".join(blockers or reasons or ["Картка готова до публікації."])
